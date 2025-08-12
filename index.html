@@ -1,0 +1,386 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Rise Embed Examples – Interactive HTML</title>
+  <style>
+    :root {
+      --bg: #0f172a;          /* slate-900 */
+      --panel: #111827;       /* gray-900 */
+      --muted: #94a3b8;       /* slate-400 */
+      --text: #e5e7eb;        /* gray-200 */
+      --brand: #22c55e;       /* green-500 */
+      --brand-2: #06b6d4;     /* cyan-500 */
+      --danger: #ef4444;      /* red-500 */
+      --ok: #10b981;          /* emerald-500 */
+      --card: #0b1220;        /* deeper slate */
+      --border: #1f2937;      /* gray-800 */
+      --focus: #fbbf24;       /* amber-400 */
+      --shadow: 0 10px 30px rgba(0,0,0,0.35);
+      --radius: 16px;
+    }
+
+    html, body { height: 100%; }
+    body {
+      margin: 0;
+      background: radial-gradient(1200px 600px at 50% -20%, #1f2937 0%, var(--bg) 45%);
+      color: var(--text);
+      font: 16px/1.5 system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, "Apple Color Emoji", "Segoe UI Emoji";
+      display: grid;
+      place-items: start center;
+      padding: 24px;
+    }
+
+    .app {
+      width: min(960px, 100%);
+      background: linear-gradient(180deg, #0c1324 0%, #0a0f1d 100%);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      overflow: hidden;
+    }
+
+    header {
+      padding: 20px clamp(16px, 3vw, 28px);
+      display: grid;
+      gap: 6px;
+      background: linear-gradient(90deg, rgba(34,197,94,0.08), rgba(6,182,212,0.08));
+      border-bottom: 1px solid var(--border);
+    }
+    header h1 {
+      font-size: clamp(18px, 3.2vw, 28px);
+      margin: 0;
+      letter-spacing: .2px;
+    }
+    header p { margin: 0; color: var(--muted); font-size: 0.95rem; }
+
+    /* Tabs */
+    .tabs { display: flex; gap: 8px; padding: 12px; flex-wrap: wrap; }
+    .tab-btn {
+      appearance: none;
+      border: 1px solid var(--border);
+      background: #0d1627;
+      color: var(--text);
+      padding: 10px 14px;
+      border-radius: 999px;
+      cursor: pointer;
+      font-weight: 600;
+      transition: transform .05s ease, background .2s ease;
+    }
+    .tab-btn[aria-selected="true"] {
+      background: linear-gradient(90deg, rgba(34,197,94,.18), rgba(6,182,212,.18));
+      outline: 2px solid transparent;
+    }
+    .tab-btn:focus-visible { outline: 2px dashed var(--focus); outline-offset: 2px; }
+    .tab-btn:active { transform: translateY(1px); }
+
+    main { padding: 4px 16px 20px; }
+    section[role="tabpanel"] { display: none; }
+    section[role="tabpanel"][data-active="true"] { display: block; }
+
+    /* Cards / panels */
+    .panel {
+      background: var(--panel);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: clamp(14px, 3vw, 22px);
+      margin: 14px 0;
+    }
+
+    .row { display: grid; gap: 14px; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); }
+
+    /* Buttons */
+    .btn { cursor: pointer; border: 1px solid var(--border); border-radius: 12px; padding: 10px 14px; background: #0c1526; color: var(--text); font-weight: 600; }
+    .btn:hover { background: #0e1a33; }
+    .btn.primary { background: linear-gradient(90deg, rgba(34,197,94,.22), rgba(6,182,212,.22)); }
+    .btn.ghost { background: transparent; }
+
+    /* Quiz */
+    .quiz h3 { margin-top: 0; }
+    .choice {
+      display: grid; grid-template-columns: 1.5rem 1fr; gap: 10px; align-items: center;
+      padding: 10px; border: 1px solid var(--border); border-radius: 12px; background: #0b1425;
+    }
+    .choice + .choice { margin-top: 8px; }
+    .choice input { width: 1.25rem; height: 1.25rem; }
+    .feedback { margin-top: 10px; font-weight: 600; }
+    .feedback.ok { color: var(--ok); }
+    .feedback.no { color: var(--danger); }
+
+    /* Scenario */
+    .scenario .step { display: none; }
+    .scenario .step[data-active="true"] { display: block; }
+    .scenario .avatar {
+      width: 56px; height: 56px; border-radius: 50%; background: linear-gradient(135deg, #22c55e33, #06b6d433);
+      display: grid; place-items: center; font-weight: 800;
+      border: 1px solid var(--border);
+    }
+    .scenario .msg { background: #0b1425; border: 1px solid var(--border); padding: 12px 14px; border-radius: 14px; }
+
+    /* Flashcards */
+    .cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 12px; }
+    .card {
+      perspective: 1000px; height: 160px; position: relative;
+    }
+    .card-inner { position: absolute; inset: 0; transition: transform .5s; transform-style: preserve-3d; cursor: pointer; }
+    .card[aria-pressed="true"] .card-inner { transform: rotateY(180deg); }
+    .card-face { position: absolute; inset: 0; display: grid; place-items: center; border: 1px solid var(--border); border-radius: 14px; background: #0b1425; backface-visibility: hidden; padding: 10px; text-align: center; }
+    .card-face.back { transform: rotateY(180deg); }
+
+    /* Timeline */
+    .timeline { display: grid; gap: 10px; }
+    .tl-item { display: grid; grid-template-columns: auto 1fr; gap: 10px; align-items: start; }
+    .tl-dot { width: 12px; height: 12px; border-radius: 50%; background: var(--brand-2); margin-top: 8px; }
+    .tl-panel { background: #0b1425; border: 1px solid var(--border); border-radius: 12px; padding: 10px; }
+
+    /* Progress / checklist */
+    .meter { height: 10px; background: #0b1425; border: 1px solid var(--border); border-radius: 999px; overflow: hidden; }
+    .meter > span { display: block; height: 100%; background: linear-gradient(90deg, var(--brand), var(--brand-2)); width: 0%; transition: width .2s; }
+    .list { display: grid; gap: 10px; }
+    .list .item { display: grid; grid-template-columns: auto 1fr; gap: 10px; align-items: center; background: #0b1425; border: 1px solid var(--border); padding: 10px; border-radius: 12px; }
+
+    /* Footer note */
+    .note { color: var(--muted); font-size: .9rem; margin-top: 10px; }
+
+    @media (prefers-reduced-motion: reduce) {
+      * { transition: none !important; animation: none !important; }
+    }
+  </style>
+</head>
+<body>
+  <div class="app" role="application" aria-label="Interactive learning examples">
+    <header>
+      <h1>Interactive HTML Examples for Rise</h1>
+      <p>Single-file widgets you can host and embed via a Rise <em>Embed</em> block. Switch tabs to try each pattern.</p>
+    </header>
+
+    <nav class="tabs" role="tablist" aria-label="Examples">
+      <button class="tab-btn" role="tab" aria-selected="true" aria-controls="quiz" id="tab-quiz">1) Knowledge Check</button>
+      <button class="tab-btn" role="tab" aria-selected="false" aria-controls="scenario" id="tab-scenario">2) Scenario</button>
+      <button class="tab-btn" role="tab" aria-selected="false" aria-controls="flashcards" id="tab-flash">3) Flashcards</button>
+      <button class="tab-btn" role="tab" aria-selected="false" aria-controls="timeline" id="tab-timeline">4) Timeline</button>
+      <button class="tab-btn" role="tab" aria-selected="false" aria-controls="checklist" id="tab-checklist">5) Checklist</button>
+    </nav>
+
+    <main>
+      <!-- 1) QUIZ -->
+      <section id="quiz" role="tabpanel" aria-labelledby="tab-quiz" data-active="true">
+        <div class="panel quiz" aria-live="polite">
+          <h3>Knowledge Check: Radio Procedure</h3>
+          <p class="note">Select the best answer and submit. Designed for quick checks within a lesson.</p>
+
+          <form id="quiz-form">
+            <fieldset>
+              <legend class="visually-hidden">Quiz</legend>
+              <label class="choice"><input type="radio" name="q1" value="a" /> Use 10-codes for everything to sound official.</label>
+              <label class="choice"><input type="radio" name="q1" value="b" /> Keep transmissions concise and identify yourself.</label>
+              <label class="choice"><input type="radio" name="q1" value="c" /> Hold the PTT 1 second after you start speaking.</label>
+            </fieldset>
+            <div style="display:flex; gap:8px; margin-top:12px;">
+              <button class="btn primary" type="submit">Submit</button>
+              <button class="btn ghost" type="button" id="reset-quiz">Reset</button>
+            </div>
+          </form>
+          <div id="quiz-feedback" class="feedback" aria-live="polite"></div>
+        </div>
+      </section>
+
+      <!-- 2) SCENARIO -->
+      <section id="scenario" role="tabpanel" aria-labelledby="tab-scenario">
+        <div class="panel scenario">
+          <h3>Branching Scenario: Visitor Access</h3>
+          <p class="note">Short decision tree with immediate feedback. Great for <em>What would you do?</em> moments.</p>
+
+          <div class="step" data-step="1" data-active="true">
+            <div class="row">
+              <div class="avatar" aria-hidden="true">V</div>
+              <div class="msg">
+                A visitor arrives without a badge but has a meeting scheduled. What’s your first action?
+              </div>
+            </div>
+            <div style="display:flex; gap:8px; margin-top:12px;">
+              <button class="btn" data-goto="2a">Politely escort to meeting room.</button>
+              <button class="btn" data-goto="2b">Verify identity and meeting with reception.</button>
+            </div>
+          </div>
+
+          <div class="step" data-step="2a">
+            <div class="row">
+              <div class="avatar" aria-hidden="true">X</div>
+              <div class="msg">Escorting without verification risks security. Try again.</div>
+            </div>
+            <div style="margin-top:12px;"><button class="btn" data-goto="1">Back</button></div>
+          </div>
+
+          <div class="step" data-step="2b">
+            <div class="row">
+              <div class="avatar" aria-hidden="true">✓</div>
+              <div class="msg">Correct. Verify, register, and issue a temporary badge.</div>
+            </div>
+            <div style="margin-top:12px;"><button class="btn" data-goto="1">Restart</button></div>
+          </div>
+        </div>
+      </section>
+
+      <!-- 3) FLASHCARDS -->
+      <section id="flashcards" role="tabpanel" aria-labelledby="tab-flash">
+        <div class="panel">
+          <h3>Flashcards: First Aid Basics</h3>
+          <p class="note">Tap a card to flip. Ideal for terminology or quick definitions.</p>
+          <div class="cards" id="cards"></div>
+        </div>
+      </section>
+
+      <!-- 4) TIMELINE -->
+      <section id="timeline" role="tabpanel" aria-labelledby="tab-timeline">
+        <div class="panel">
+          <h3>Timeline: Incident Response Flow</h3>
+          <p class="note">High-level sequence for reinforcement. Click each step for details.</p>
+          <div class="timeline" id="timelineList"></div>
+        </div>
+      </section>
+
+      <!-- 5) CHECKLIST & PROGRESS -->
+      <section id="checklist" role="tabpanel" aria-labelledby="tab-checklist">
+        <div class="panel">
+          <h3>Checklist: Pre-Shift Readiness</h3>
+          <p class="note">Track completion and show lightweight progress.</p>
+          <div class="meter" aria-label="Completion"><span id="meterBar"></span></div>
+          <div class="list" id="todo"></div>
+          <div style="margin-top:10px; display:flex; gap:8px;">
+            <button class="btn ghost" id="resetChecklist">Reset</button>
+          </div>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <script>
+    // --- Accessible tab switcher ---
+    const tabs = Array.from(document.querySelectorAll('.tab-btn'));
+    const panels = Array.from(document.querySelectorAll('section[role="tabpanel"]'));
+    function activateTab(id) {
+      tabs.forEach(t => t.setAttribute('aria-selected', String(t.id === 'tab-' + id)));
+      panels.forEach(p => p.dataset.active = String(p.id === id));
+      postSize();
+    }
+    tabs.forEach(btn => btn.addEventListener('click', () => activateTab(btn.getAttribute('aria-controls'))));
+
+    // --- Quiz logic ---
+    const quizForm = document.getElementById('quiz-form');
+    const quizFeedback = document.getElementById('quiz-feedback');
+    const resetQuizBtn = document.getElementById('reset-quiz');
+    quizForm.addEventListener('submit', (e) => {
+      e.preventDefault();
+      const choice = new FormData(quizForm).get('q1');
+      if (!choice) { quizFeedback.textContent = 'Please select an answer.'; quizFeedback.className = 'feedback'; return; }
+      const correct = choice === 'b';
+      quizFeedback.textContent = correct ? 'Correct: concise, identify yourself, and key details only.' : 'Not quite. Best practice is to be concise and identify yourself.';
+      quizFeedback.className = 'feedback ' + (correct ? 'ok' : 'no');
+      postSize();
+    });
+    resetQuizBtn.addEventListener('click', () => {
+      quizForm.reset();
+      quizFeedback.textContent = '';
+      quizFeedback.className = 'feedback';
+      postSize();
+    });
+
+    // --- Scenario branching ---
+    const scenario = document.querySelector('.scenario');
+    function showStep(stepId) {
+      scenario.querySelectorAll('.step').forEach(s => s.dataset.active = String(s.dataset.step === stepId));
+      postSize();
+    }
+    scenario.addEventListener('click', (e) => {
+      const btn = e.target.closest('button[data-goto]');
+      if (!btn) return;
+      showStep(btn.dataset.goto);
+    });
+
+    // --- Flashcards data & interaction ---
+    const cardData = [
+      { q: 'A-B-C of first aid', a: 'Airway, Breathing, Circulation' },
+      { q: 'PPE stands for…', a: 'Personal Protective Equipment' },
+      { q: 'Position for fainting victim', a: 'Supine with legs elevated if safe' },
+      { q: 'Call 9-1-1 when…', a: 'Life-threatening emergencies or unsure—err on safety' },
+    ];
+    const cardsEl = document.getElementById('cards');
+    cardData.forEach(({q,a}, i) => {
+      const c = document.createElement('button');
+      c.className = 'card';
+      c.setAttribute('aria-pressed', 'false');
+      c.setAttribute('aria-label', `Flashcard ${i+1}: ${q}`);
+      c.innerHTML = `<div class="card-inner">
+        <div class="card-face"><strong>${q}</strong></div>
+        <div class="card-face back">${a}</div>
+      </div>`;
+      c.addEventListener('click', () => {
+        const state = c.getAttribute('aria-pressed') === 'true';
+        c.setAttribute('aria-pressed', String(!state));
+      });
+      cardsEl.appendChild(c);
+    });
+
+    // --- Timeline data ---
+    const steps = [
+      { t: '1) Assess & Ensure Safety', d: 'Scan for hazards. Do not enter unsafe scenes.' },
+      { t: '2) Alert', d: 'Call appropriate emergency services and notify control.' },
+      { t: '3) Contain', d: 'Prevent escalation; establish a perimeter if needed.' },
+      { t: '4) Document', d: 'Record observations, actions, and times.' },
+      { t: '5) Report & Review', d: 'Complete reports and debrief for improvements.' },
+    ];
+    const tl = document.getElementById('timelineList');
+    steps.forEach((s, idx) => {
+      const el = document.createElement('details');
+      el.className = 'tl-item';
+      el.innerHTML = `<summary><span class="tl-dot" aria-hidden="true"></span><strong>${s.t}</strong></summary><div class="tl-panel">${s.d}</div>`;
+      if (idx === 0) el.setAttribute('open', '');
+      tl.appendChild(el);
+    });
+
+    // --- Checklist with progress ---
+    const items = [
+      'Uniform presentable & ID visible',
+      'Radio checked & spare battery',
+      'Site notes reviewed',
+      'Post orders acknowledged',
+      'Emergency numbers handy',
+    ];
+    const todo = document.getElementById('todo');
+    const meter = document.getElementById('meterBar');
+    function updateMeter() {
+      const total = items.length;
+      const done = todo.querySelectorAll('input:checked').length;
+      meter.style.width = Math.round((done/total)*100) + '%';
+      meter.setAttribute('aria-valuenow', String(done));
+      meter.setAttribute('aria-valuemax', String(total));
+      postSize();
+    }
+    items.forEach((label, i) => {
+      const row = document.createElement('label');
+      row.className = 'item';
+      row.innerHTML = `<input type="checkbox" aria-label="${label}"><span>${label}</span>`;
+      row.querySelector('input').addEventListener('change', updateMeter);
+      todo.appendChild(row);
+    });
+    document.getElementById('resetChecklist').addEventListener('click', () => {
+      todo.querySelectorAll('input').forEach(cb => cb.checked = false);
+      updateMeter();
+    });
+    updateMeter();
+
+    // Auto-resize for iframes (Rise) – posts height to parent
+    function postSize() {
+      const h = document.querySelector('.app').offsetHeight + 24; // padding margin
+      if (window.parent !== window) {
+        window.parent.postMessage({ type: 'resize-iframe', height: h }, '*');
+      }
+    }
+    const ro = new ResizeObserver(postSize);
+    ro.observe(document.querySelector('.app'));
+    window.addEventListener('load', postSize);
+  </script>
+</body>
+</html>
